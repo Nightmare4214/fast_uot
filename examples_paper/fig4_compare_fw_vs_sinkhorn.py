@@ -1,32 +1,29 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import time as time
 import os
+import time as time
+
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
-from fastuot.uot1d import rescale_potentials, solve_ot, solve_uot
 from fastuot.torch_sinkhorn import h_sinkhorn_loop
 from fastuot.torch_sinkhorn import rescale_potentials as translate_pot
+from fastuot.uot1d import rescale_potentials, solve_ot, solve_uot
 from utils_examples import generate_synthetic_measure
 
 rc = {"pdf.fonttype": 42, 'text.usetex': True,
-      'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amssymb}']}
+      'text.latex.preamble': ''.join([r'\usepackage{amsmath}', r'\usepackage{amssymb}'])}
 plt.rcParams.update(rc)
 
 assert torch.cuda.is_available()
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + 'bench_fw_sink/'
-if not os.path.isdir(path):
-    os.mkdir(path)
-
-
+path = os.path.join(os.getcwd(), "output")
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, 'bench_fw_sink')
+os.makedirs(path, exist_ok=True)
 
 # TODO: make plot with projected WOT data as well
 if __name__ == '__main__':
-    compute_data = False
+    compute_data = True
 
     rho = 1.
     p = 2.
@@ -44,7 +41,7 @@ if __name__ == '__main__':
     if compute_data:
         # Compute unregularized exact dual potential as reference
         _, _, _, fr, _, _ = solve_uot(a, b, x, y, p, rho, niter=20000)
-        np.save(path + "ref_pot_maxiter.npy", fr)
+        np.save(os.path.join(path, "ref_pot_maxiter.npy"), fr)
         print("Computed reference potential")
 
         #######################################################################
@@ -68,8 +65,8 @@ if __name__ == '__main__':
             f, g = f + transl, g - transl
             time_fw.append(time.time() - t0)
             acc_fw.append(np.amax(np.abs(f - fr)))
-        np.save(path + f"time_fw.npy", np.array(time_fw))
-        np.save(path + f"err_fw.npy", np.array(acc_fw))
+        np.save(os.path.join(path, f"time_fw.npy"), np.array(time_fw))
+        np.save(os.path.join(path, f"err_fw.npy"), np.array(acc_fw))
 
         #######################################################################
         # Bench Sinkhorn GPU
@@ -92,9 +89,9 @@ if __name__ == '__main__':
                 time_sink.append(time.time() - t0)
                 transl = translate_pot(ft, gt, at, bt, rho, rho)
                 acc_sink.append((ft + transl - frt).abs().max().data.item())
-            np.save(path + f"time_sink_eps{logeps}.npy",
+            np.save(os.path.join(path, f"time_sink_eps{logeps}.npy"),
                     np.array(time_sink))
-            np.save(path + f"err_sink_eps{logeps}.npy",
+            np.save(os.path.join(path, f"err_sink_eps{logeps}.npy"),
                     np.array(acc_sink))
 
     ###########################################################################
@@ -102,29 +99,28 @@ if __name__ == '__main__':
     ###########################################################################
     # Compute median time of loop for rescaling x-axis
     list_time = []
-    list_time.append(np.median(np.load(path + f"time_fw.npy")))
+    list_time.append(np.median(np.load(os.path.join(path, f"time_fw.npy"))))
     for k, logeps in enumerate(list_eps):
         list_time.append(np.median(
-            np.load(path + f"time_sink_eps{logeps}.npy")))
+            np.load(os.path.join(path, f"time_sink_eps{logeps}.npy"))))
 
     # Aggregating all convergence accuracies and plotting
     list_acc = []
-    list_acc.append(np.load(path + f"err_fw.npy"))
+    list_acc.append(np.load(os.path.join(path, f"err_fw.npy")))
     for k, logeps in enumerate(list_eps):
         list_acc.append(
-            np.load(path + f"err_sink_eps{logeps}.npy"))
+            np.load(os.path.join(path, f"err_sink_eps{logeps}.npy")))
 
     colors = ['cornflowerblue', 'lightcoral', 'indianred', 'firebrick']
-    labels = ['FW'] \
-             + [r'TI, $\log\varepsilon$='+str(x) for x in list_eps]
+    labels = ['FW'] + [r'TI, $\log\varepsilon$=' + str(x) for x in list_eps]
 
     plt.figure(figsize=(4, 2.5))
     for k, t in enumerate(list_time):
         plt.plot(t * np.arange(1, nits + 1), list_acc[k], c=colors[k],
-                  label=labels[k])
+                 label=labels[k])
 
     plt.xlabel('Time', fontsize=15)
-    plt.ylabel('$\|f_t - f^*\|_\infty$', fontsize=15)
+    plt.ylabel(r'$\|f_t - f^*\|_\infty$', fontsize=15)
     plt.yscale('log')
     plt.xscale('log')
     plt.grid()
@@ -133,6 +129,5 @@ if __name__ == '__main__':
     # plt.legend(fontsize=9, ncol=2, handlelength=1.3, columnspacing=0.5,
     #            loc=(0.01, 0.01))
     plt.tight_layout()
-    plt.savefig(path + 'plot_bench_fw_sink+0.pdf')
+    plt.savefig(os.path.join(path, 'plot_bench_fw_sink+0.pdf'))
     plt.show()
-

@@ -1,5 +1,6 @@
-import pytest
 import numpy as np
+import pytest
+
 from fastuot.uot1d import rescale_potentials, dual_loss, init_greed_uot, \
     solve_uot, lazy_potential, solve_ot, homogeneous_line_search, \
     invariant_dual_loss, newton_line_search

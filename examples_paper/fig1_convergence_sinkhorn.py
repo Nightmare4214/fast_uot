@@ -1,22 +1,23 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 
-from utils_examples import generate_synthetic_measure
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
 from fastuot.numpy_sinkhorn import f_sinkhorn_loop, h_sinkhorn_loop
+from utils_examples import generate_synthetic_measure
 
-path = os.getcwd() + "/output/"
+path = os.path.join(os.getcwd(), 'output')
 print(path)
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "sinkcv/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, 'sinkcv')
+os.makedirs(path, exist_ok=True)
+# plt.rcParams['text.usetex'] = True
+# plt.rcParams['text.latex.preamble'] = [
+#     r'\usepackage{amsmath}',
+#     r'\usepackage{amssymb}']
 rc = {"pdf.fonttype": 42, 'text.usetex': True,
-      'text.latex.preamble': [r'\usepackage{amsmath}',
-                              r'\usepackage{amssymb}']}
+      'text.latex.preamble': ''.join([r'\usepackage{amsmath}', r'\usepackage{amssymb}'])}
 plt.rcParams.update(rc)
 
 if __name__ == '__main__':
@@ -32,7 +33,6 @@ if __name__ == '__main__':
     penalty = 'kl'
     t = 1e-2
     scale_l = [1e-0, 1e-2]
-
 
     if compute_data:
         for t in scale_l:
@@ -60,7 +60,7 @@ if __name__ == '__main__':
                     if np.amax(np.abs(f - fr)) < 1e-12:
                         break
                 np.save(
-                    path + "error_" + s + f"_sinkhorn_{penalty}_eps{eps}_{dataname}.npy",
+                    os.path.join(path, f"error_{s}_sinkhorn_{penalty}_eps{eps}_{dataname}.npy"),
                     np.array(err))
 
     ###########################################################################
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         eps, rho = t * eps_r, t * rho_r
         for s, label, color in zip(string_method, labels, colors):
             err = np.load(
-                path + f"error_" + s + f"_sinkhorn_{penalty}_eps{eps}_{dataname}.npy")
+                os.path.join(path, f"error_{s}_sinkhorn_{penalty}_eps{eps}_{dataname}.npy"))
             ax.plot(err, c=color, linestyle=linestyle,
                     label=label + f'{t}',
                     marker=marker, markevery=markevery)
@@ -94,9 +94,9 @@ if __name__ == '__main__':
         ax.set_title('KL entropy', fontsize=22)
     if penalty == 'berg':
         ax.set_title('Berg entropy', fontsize=22)
-    ax.set_ylabel('$|| f_t - f^\star||_{\infty}$', fontsize=18)
+    ax.set_ylabel(r'$|| f_t - f^\star||_{\infty}$', fontsize=18)
 
     plt.tight_layout()
     plt.savefig(
-        path + f'plot_cv_error_{penalty}_{dataname}.pdf')
+        os.path.join(path, f'plot_cv_error_{penalty}_{dataname}.pdf'))
     plt.show()

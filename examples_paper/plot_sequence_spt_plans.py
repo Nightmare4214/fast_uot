@@ -1,18 +1,17 @@
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
 import cvxpy as cp
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.sparse import csr_matrix
+from tqdm import tqdm
 
 from fastuot.uot1d import solve_ot, rescale_potentials, dual_loss
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "/plots_support/"
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, "plots_support")
+os.makedirs(path, exist_ok=True)
 
 
 def solver_via_cvxpy(a, b, x, y, p, rho):
@@ -34,21 +33,21 @@ def shortest_cost_path(c):
     I.append(0)
     J.append(0)
     i, j = 0, 0
-    while (i < c.shape[0]-1) and (j < c.shape[1]-1):
+    while (i < c.shape[0] - 1) and (j < c.shape[1] - 1):
         c12 = c[i, (j + 1)]
         c21 = c[(i + 1), j]
         c22 = c[(i + 1), (j + 1)]
         if (c22 < c12) and (c22 < c21):
-            i = i+1
-            j = j+1
+            i = i + 1
+            j = j + 1
             I.append(i)
             J.append(j)
         elif c12 < c21:
-            j = j+1
+            j = j + 1
             I.append(i)
             J.append(j)
         else:
-            i = i+1
+            i = i + 1
             I.append(i)
             J.append(j)
     return I, J
@@ -73,22 +72,22 @@ if __name__ == '__main__':
     result, constr, P = solver_via_cvxpy(a, b, x, y, p, rho)
     plt.imshow(np.log(P.value + 1e-10))
     plt.title('CVXPY')
-    plt.savefig(path + 'img_ref_cvxpy.png')
+    plt.savefig(os.path.join(path, 'img_ref_cvxpy.png'))
     plt.clf()
 
     c = np.abs(x[:, None] - y[None, :]) ** p
     Ic, Jc = shortest_cost_path(c)
     plt.scatter(Jc, Ic, color='r')
-    plt.imshow(np.abs(x[:,None]-y[None,:])**p)
+    plt.imshow(np.abs(x[:, None] - y[None, :]) ** p)
     plt.title('COST')
-    plt.savefig(path + 'img_cost.png')
+    plt.savefig(os.path.join(path, 'img_cost.png'))
     plt.clf()
 
     # start iterations
     dual_value, primal_value = [], []
     f = np.zeros_like(a)
     g = np.zeros_like(b)
-    for k in range(niter):
+    for k in tqdm(range(niter)):
         transl = rescale_potentials(f, g, a, b, rho, rho)
         f, g = f + transl, g - transl
         A = np.exp(-f / rho) * a
@@ -105,13 +104,14 @@ if __name__ == '__main__':
                         shape=(x.shape[0], y.shape[0])).toarray()
         plt.imshow(np.log(pi + 1e-10))
         plt.title(f'Iter {k}')
-        plt.savefig(path + f'img_fw_iter{k}.png')
+        plt.savefig(os.path.join(path, f'img_fw_iter{k}.png'))
         plt.clf()
 
     plt.plot(dual_value[10:], label='dual')
     plt.title('Dual Value')
     plt.legend()
-    plt.savefig(path + f'img_dual_cost.png')
+    plt.savefig(os.path.join(path, f'img_dual_cost.png'))
+    plt.show()
     plt.clf()
 
     print("first potential", f)

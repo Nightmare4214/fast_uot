@@ -1,20 +1,16 @@
 import os
 import time
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from fastuot.uot1d import solve_ot, rescale_potentials, invariant_dual_loss, \
-    homogeneous_line_search, solve_uot
+from fastuot.uot1d import solve_ot, rescale_potentials, invariant_dual_loss, homogeneous_line_search, solve_uot
 from utils_examples import generate_random_measure
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + 'variantfw/'
-if not os.path.isdir(path):
-    os.mkdir(path)
-
+path = os.path.join(os.getcwd(), "output")
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, 'variantfw')
+os.makedirs(path, exist_ok=True)
 
 rc = {"pdf.fonttype": 42, 'text.usetex': True}
 plt.rcParams.update(rc)
@@ -38,7 +34,7 @@ if __name__ == '__main__':
     if compute_data:
         print('Computing optimal reference potential...')
         _, _, _, fr, _, _ = solve_uot(a, b, x, y, p, rho, niter=niter_ref)
-        np.save(path + "ref_pot_maxiter.npy", fr)
+        np.save(os.path.join(path, "ref_pot_maxiter.npy"), fr)
 
         #######################################################################
         # Vanilla FW
@@ -140,7 +136,7 @@ if __name__ == '__main__':
                 atoms.append([fs, gs])
                 weights.append(0.)
 
-            gamma = homogeneous_line_search(f, g, fs-fa, gs-ga, a, b, rho, rho,
+            gamma = homogeneous_line_search(f, g, fs - fa, gs - ga, a, b, rho, rho,
                                             nits=5, tmax=weights[itop])
             f = f + gamma * (fs - fa)
             g = g + gamma * (gs - ga)
@@ -164,37 +160,37 @@ if __name__ == '__main__':
         t_fw = np.median(np.array(time_fw))
         t_hfw = np.median(np.array(time_hfw))
         t_pfw = np.median(np.array(time_pfw))
-        np.save(path + "time_comput_fw.npy",
+        np.save(os.path.join(path, "time_comput_fw.npy"),
                 np.array([t_fw, t_hfw, t_pfw]))
-        np.save(path + "err_fw.npy",
+        np.save(os.path.join(path, "err_fw.npy"),
                 np.array(norm_fw))
-        np.save(path + "err_hfw.npy",
+        np.save(os.path.join(path, "err_hfw.npy"),
                 np.array(norm_hfw))
-        np.save(path + "err_pfw.npy",
+        np.save(os.path.join(path, "err_pfw.npy"),
                 np.array(norm_pfw))
 
     lw = 1.5
     colors = ['cornflowerblue', 'indianred', 'mediumseagreen']
 
     # Plot results
-    time_arr = np.load(path + "time_comput_fw.npy")
+    time_arr = np.load(os.path.join(path, "time_comput_fw.npy"))
     t_fw, t_hfw, t_pfw = time_arr[0], time_arr[1], time_arr[2]
-    err_fw = np.load(path + "err_fw.npy")
-    err_hfw = np.load(path + "err_hfw.npy")
-    err_pfw = np.load(path + "err_pfw.npy")
+    err_fw = np.load(os.path.join(path, "err_fw.npy"))
+    err_hfw = np.load(os.path.join(path, "err_hfw.npy"))
+    err_pfw = np.load(os.path.join(path, "err_pfw.npy"))
     plt.figure(figsize=(4, 2.5))
-    plt.plot(t_pfw * np.arange(1., len(err_pfw) + 1),  10**np.array(err_pfw),
+    plt.plot(t_pfw * np.arange(1., len(err_pfw) + 1), 10 ** np.array(err_pfw),
              label='PFW', c=colors[2], linewidth=lw)
-    plt.plot(t_hfw * np.arange(1., len(err_hfw) + 1),  10**np.array(err_hfw),
+    plt.plot(t_hfw * np.arange(1., len(err_hfw) + 1), 10 ** np.array(err_hfw),
              label='LFW', c=colors[1], linewidth=lw)
-    plt.plot(t_fw * np.arange(1., len(err_fw) + 1),  10**np.array(err_fw),
+    plt.plot(t_fw * np.arange(1., len(err_fw) + 1), 10 ** np.array(err_fw),
              label='FW', c=colors[0], linewidth=lw)
     plt.xlabel('Time', fontsize=15)
     plt.grid()
     plt.xscale('log')
     plt.yscale('log')
-    plt.ylabel('$\|f_t - f^*\|_\infty$', fontsize=15)
+    plt.ylabel(r'$\|f_t - f^*\|_\infty$', fontsize=15)
     plt.legend(fontsize=11)
     plt.tight_layout()
-    plt.savefig(path + f'plot_fw_comparison.pdf')
+    plt.savefig(os.path.join(path, f'plot_fw_comparison.pdf'))
     plt.show()

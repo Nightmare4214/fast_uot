@@ -1,9 +1,6 @@
-import numpy as np
 import numba
+import numpy as np
 from numba import jit
-import scipy as sp  # for sparse matrices
-import scipy.sparse.linalg as sln
-from scipy.sparse import csr_matrix
 from tqdm import tqdm
 
 

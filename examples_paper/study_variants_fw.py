@@ -1,24 +1,20 @@
 import os
 import time
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from fastuot.uot1d import solve_ot, rescale_potentials, invariant_dual_loss, \
-    homogeneous_line_search
 from fastuot.cvxpy_uot import dual_via_cvxpy
+from fastuot.uot1d import solve_ot, rescale_potentials, invariant_dual_loss, homogeneous_line_search
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "/paper/"
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, "paper")
+os.makedirs(path, exist_ok=True)
 
-
-rc = {"pdf.fonttype": 42, 'text.usetex': True, 'text.latex.preview': True}
+rc = {"pdf.fonttype": 42, 'text.usetex': True}
 plt.rcParams.update(rc)
-lw =2
+lw = 2
 
 
 def normalize(x):
@@ -26,7 +22,7 @@ def normalize(x):
 
 
 def gauss(grid, mu, sig):
-    return np.exp(-0.5 * ((grid-mu) / sig) ** 2)
+    return np.exp(-0.5 * ((grid - mu) / sig) ** 2)
 
 
 def hilbert_norm(f):
@@ -59,7 +55,6 @@ if __name__ == '__main__':
     n, m = 50, 50
     # a, x, b, y = generate_measure(n, m)
     a, x, b, y = generate_random_measure(n, m)
-
 
     # params
     p = 1.5
@@ -203,7 +198,7 @@ if __name__ == '__main__':
             atoms.append([fs, gs])
             weights.append(0.)
 
-        gamma = homogeneous_line_search(f, g, fs-fa, gs-ga, a, b, rho, rho,
+        gamma = homogeneous_line_search(f, g, fs - fa, gs - ga, a, b, rho, rho,
                                         nits=5, tmax=weights[itop])
         f = f + gamma * (fs - fa)
         g = g + gamma * (gs - ga)
@@ -244,15 +239,15 @@ if __name__ == '__main__':
     t_pfw = np.median(np.array(time_pfw))
     plt.figure(figsize=(8, 5))
     # plt.plot(norm_lfw, label='LFW')
-    plt.plot(t_hfw * np.arange(len(norm_hfw)),  np.array(norm_hfw),
+    plt.plot(t_hfw * np.arange(len(norm_hfw)), np.array(norm_hfw),
              label='$HFW$', c='r', linewidth=lw)
-    plt.plot(t_pfw * np.arange(len(norm_pfw)),  np.array(norm_pfw),
+    plt.plot(t_pfw * np.arange(len(norm_pfw)), np.array(norm_pfw),
              label='$PFW$', c='g', linewidth=lw)
-    plt.plot(t_fw * np.arange(len(norm_fw)),  np.array(norm_fw),
+    plt.plot(t_fw * np.arange(len(norm_fw)), np.array(norm_fw),
              label='$FW$', c='b', linewidth=lw)
     plt.xlabel('$Time$', fontsize=20)
-    plt.ylabel('$\log_{10}\|f_t - f^*\|_\infty$', fontsize=20)
+    plt.ylabel(r'$\log_{10}\|f_t - f^*\|_\infty$', fontsize=20)
     plt.legend(fontsize=10)
     plt.tight_layout()
-    plt.savefig(path + f'plot_fw_comparison.pdf')
+    plt.savefig(os.path.join(path, f'plot_fw_comparison.pdf'))
     plt.show()

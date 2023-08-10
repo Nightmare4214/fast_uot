@@ -1,20 +1,18 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 
-from utils_examples import generate_synthetic_measure
+import matplotlib.pyplot as plt
+import numpy as np
+
 from fastuot.numpy_sinkhorn import sinkx, sinky, aprox, rescale_potentials
+from utils_examples import generate_synthetic_measure
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "gsink/"
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, "gsink")
+os.makedirs(path, exist_ok=True)
 
-rc = {"pdf.fonttype": 42, 'text.usetex': True, 'text.latex.preview': True,
-      'text.latex.preamble': [r'\usepackage{amsmath}',
-                              r'\usepackage{amssymb}']}
+rc = {"pdf.fonttype": 42, 'text.usetex': True,
+      'text.latex.preamble': ''.join([r'\usepackage{amsmath}', r'\usepackage{amssymb}'])}
 plt.rcParams.update(rc)
 
 
@@ -38,7 +36,7 @@ def g_sinkhorn_loop(f, g, t, a, b, C, eps, rho, rho2=None):
 
 
 if __name__ == '__main__':
-    compute_data = False  # If false then load precomputed results and plots
+    compute_data = True  # If false then load precomputed results and plots
     wot_data = True  # If true uses the WOT package biological data
 
     marginal_penalty_l = ['kl']
@@ -47,7 +45,7 @@ if __name__ == '__main__':
 
     # load data for computations
     N = 50
-    a, x, b, y = generate_synthetic_measure(N, N+1)
+    a, x, b, y = generate_synthetic_measure(N, N + 1)
     C = (x[:, None] - y[None, :]) ** 2
     dataname = 'synth'
 
@@ -61,7 +59,7 @@ if __name__ == '__main__':
     # Generate data plots
     ###########################################################################
     if compute_data:
-        np.save(path + f"rho_scale.npy", rho_scale)
+        np.save(os.path.join(path, f"rho_scale.npy"), rho_scale)
         for r in range(len(eps_l)):
             epst = 10 ** eps_l[r]
             rate = [[], [], []]
@@ -108,7 +106,7 @@ if __name__ == '__main__':
 
             for k, (s, loop) in enumerate(zip(string_method, func_method)):
                 np.save(
-                    path + "rate_" + s + f"_sinkhorn_{penalty}_eps{epst}_{dataname}.npy",
+                    os.path.join(path, f"rate_{s}_sinkhorn_{penalty}_eps{epst}_{dataname}.npy"),
                     np.array(rate[k]))
 
     ###########################################################################
@@ -123,7 +121,7 @@ if __name__ == '__main__':
     markevery = 2
     f, ax = plt.subplots(1, 1, figsize=(p * 6, p * 4))
 
-    rho_scale = 10 ** np.load(path + f"rho_scale.npy")
+    rho_scale = 10 ** np.load(os.path.join(path, f"rho_scale.npy"))
 
     for logeps in eps_l:
         epst = 10 ** logeps
@@ -131,7 +129,7 @@ if __name__ == '__main__':
                                                       string_method, colors,
                                                       markers):
             rate_f = np.load(
-                path + f"rate_" + s + f"_sinkhorn_{penalty}_eps{epst}_{dataname}.npy")
+                os.path.join(path, f"rate_{s}_sinkhorn_{penalty}_eps{epst}_{dataname}.npy"))
             ax.plot(rho_scale, 10 ** rate_f, c=color, linestyle=linestyle,
                     label=label + f' {np.around(epst, decimals=1)}',
                     marker=marker, markevery=markevery)
@@ -148,5 +146,5 @@ if __name__ == '__main__':
     ax.set_ylabel('Contraction rate', fontsize=18)
 
     plt.tight_layout()
-    plt.savefig(path + f'plot_log_contraction_rate_gsink_{penalty}_{dataname}.pdf')
+    plt.savefig(os.path.join(path, f'plot_log_contraction_rate_gsink_{penalty}_{dataname}.pdf'))
     plt.show()

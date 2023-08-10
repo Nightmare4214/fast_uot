@@ -1,21 +1,19 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from fastuot.numpy_sinkhorn import f_sinkhorn_loop, h_sinkhorn_loop
 from fastuot.uot1d import rescale_potentials
 from utils_examples import generate_synthetic_measure
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + 'rateanderson/'
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, 'rateanderson')
+os.makedirs(path, exist_ok=True)
 
-rc = {"pdf.fonttype": 42, 'text.usetex': True, 'text.latex.preview': True,
-      'text.latex.preamble': [r'\usepackage{amsmath}',
-                              r'\usepackage{amssymb}']}
+rc = {"pdf.fonttype": 42, 'text.usetex': True,
+      'text.latex.preamble': ''.join([r'\usepackage{amsmath}', r'\usepackage{amssymb}'])}
 plt.rcParams.update(rc)
 
 
@@ -66,7 +64,7 @@ def run_error_loop(loop_func, fr, epst, rhot):
 
 
 if __name__ == '__main__':
-    compute_data = False
+    compute_data = True
 
     eps_l = [-1.]
     N = 50
@@ -80,7 +78,7 @@ if __name__ == '__main__':
     # Generate data plots
     ###########################################################################
     if compute_data:
-        np.save(path + f"rho_scale.npy", rho_scale)
+        np.save(os.path.join(path, f"rho_scale.npy"), rho_scale)
         for r in range(len(eps_l)):
             epst = 10 ** eps_l[r]
             rate_f, rate_g, rate_h = [], [], []
@@ -111,7 +109,7 @@ if __name__ == '__main__':
                     rate.append(np.median(error))
 
             for rate, fname in zip(list_rates, list_fnames):
-                np.save(path + fname, rate)
+                np.save(os.path.join(path, fname), rate)
 
     ###########################################################################
     # Make plots
@@ -127,7 +125,7 @@ if __name__ == '__main__':
     markevery = 2
     f, ax = plt.subplots(1, 1, figsize=(p * 5, p * 4))
 
-    rho_scale = 10 ** np.load(path + f"rho_scale.npy")
+    rho_scale = 10 ** np.load(os.path.join(path, f"rho_scale.npy"))
 
     for r in range(len(eps_l)):
         epst = 10 ** eps_l[r]
@@ -137,7 +135,7 @@ if __name__ == '__main__':
                        f"rate_andhf_sinkhorn_kl_eps{epst}.npy"]
         list_rates = []
         for fname in list_fnames:
-            list_rates.append(np.load(path + fname))
+            list_rates.append(np.load(os.path.join(path, fname)))
 
         for r in range(len(list_fnames)):
             ax.plot(rho_scale, 10 ** list_rates[r], c=colors[r],
@@ -157,5 +155,5 @@ if __name__ == '__main__':
     ax.set_ylabel('Contraction rate', fontsize=18)
 
     plt.tight_layout()
-    plt.savefig(path + 'plot_log_contraction_rate_anderson.pdf')
+    plt.savefig(os.path.join(path, 'plot_log_contraction_rate_anderson.pdf'))
     plt.show()

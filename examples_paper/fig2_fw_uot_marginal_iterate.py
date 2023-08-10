@@ -1,20 +1,19 @@
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from tqdm import tqdm
 
 from fastuot.uot1d import solve_ot, rescale_potentials
 from utils_examples import normalize, gauss
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "/paper/"
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, "paper")
+os.makedirs(path, exist_ok=True)
 
 rc = {"pdf.fonttype": 42, 'text.usetex': True,
-      'text.latex.preamble': [r'\usepackage{amsmath}', r'\usepackage{amssymb}']}
+      'text.latex.preamble': ''.join([r'\usepackage{amsmath}', r'\usepackage{amssymb}'])}
 plt.rcParams.update(rc)
 
 
@@ -39,18 +38,19 @@ def plot_figstep(k):
     plt.plot(grid, Br, c='c', linestyle='dashed', label='target 2')
     plt.plot(grid, A, c='r', label='marg 1', )
     plt.plot(grid, B, c='b', label='marg 2', )
-    plt.fill_between(grid, Ar, A, color=(0.95,0.55,0.55,0.3))
-    plt.fill_between(grid, Br, B, color=(0.55,0.55,0.95,0.3))
+    plt.fill_between(grid, Ar, A, color=(0.95, 0.55, 0.55, 0.3))
+    plt.fill_between(grid, Br, B, color=(0.55, 0.55, 0.95, 0.3))
     plt.title(f'Iterate {k}', fontsize=16)
     plt.ylim(0.0, 0.0065)
     plt.xlim(0.15, 0.91)
     plt.axis('off')
-    if k==0:
+    if k == 0:
         plt.legend(loc=(0.4, 0.72), fontsize=12, ncol=3, columnspacing=0.5,
                    handlelength=1.3)
     plt.tight_layout()
-    plt.savefig(path + f'sequence_marginals_fw_iter_{k}.pdf')
+    plt.savefig(os.path.join(path, f'sequence_marginals_fw_iter_{k}.pdf'))
     plt.show()
+
 
 def fw_step(f, g, a, b, rho1, rho2, k):
     transl = rescale_potentials(f, g, a, b, rho, rho)
@@ -69,14 +69,14 @@ def fw_step(f, g, a, b, rho1, rho2, k):
 if __name__ == '__main__':
     single_pic = False
     a, b, grid = generate_sample_measure2()
-
+    # TODO RuntimeWarning: divide by zero
     # params
     p = 2.
     rho = 0.1
     niter = 4
 
     fr, gr = np.zeros_like(a), np.zeros_like(b)
-    for k in range(50000):
+    for k in tqdm(range(50000)):
         fr, gr, Ar, Br = fw_step(fr, gr, a, b, rho, rho, k)
 
     if single_pic:
@@ -91,9 +91,9 @@ if __name__ == '__main__':
         for k in range(niter):
             print(k + 1)
             f, g, A, B = fw_step(f, g, a, b, rho, rho, k + 1)
-            plt.plot(grid, A, c=colors_a[k + 1],
+            plt.plot(grid, A, c=colors_a[k],
                      linestyle='dashed')
-            plt.plot(grid, B, c=colors_b[k + 1],
+            plt.plot(grid, B, c=colors_b[k],
                      linestyle='dashed')
 
         plt.plot(grid, Ar, c=colors_a[-1],
@@ -108,7 +108,7 @@ if __name__ == '__main__':
                    handlelength=1.3)
 
         plt.tight_layout()
-        plt.savefig(path + f'sequence_marginals_fw_onepic.pdf')
+        plt.savefig(os.path.join(path, f'sequence_marginals_fw_onepic.pdf'))
         plt.show()
     else:
         f, g = np.zeros_like(a), np.zeros_like(b)

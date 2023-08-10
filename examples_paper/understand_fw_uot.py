@@ -1,19 +1,18 @@
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
 import cvxpy as cp
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.sparse import csr_matrix
 
-from fastuot.uot1d import solve_ot, rescale_potentials, solve_uot, \
-    compute_shortest_path_support, build_potential_from_support, dual_loss
+from fastuot.uot1d import solve_uot
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "/plots_comparison/"
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, "plots_comparison")
+os.makedirs(path, exist_ok=True)
+
+
 # else:
 #     for f in path:
 #         os.remove(f)
@@ -39,7 +38,7 @@ def dual_via_cvxpy(a, b, x, y, p, rho):
     g = cp.Variable((y.shape[0]))
     inta = cp.sum(cp.multiply(a, cp.exp(-f / rho)))
     intb = cp.sum(cp.multiply(b, cp.exp(-g / rho)))
-    constr = [f[:,None] + g[None,:] <= C]
+    constr = [f[:, None] + g[None, :] <= C]
     objective = cp.Minimize(inta + intb)
     prob = cp.Problem(objective, constr)
     result = prob.solve(abstol=1e-10)
@@ -51,21 +50,21 @@ def shortest_cost_path(c):
     I.append(0)
     J.append(0)
     i, j = 0, 0
-    while (i < c.shape[0]-1) and (j < c.shape[1]-1):
+    while (i < c.shape[0] - 1) and (j < c.shape[1] - 1):
         c12 = c[i, (j + 1)]
         c21 = c[(i + 1), j]
         c22 = c[(i + 1), (j + 1)]
         if (c22 < c12) and (c22 < c21):
-            i = i+1
-            j = j+1
+            i = i + 1
+            j = j + 1
             I.append(i)
             J.append(j)
         elif c12 < c21:
-            j = j+1
+            j = j + 1
             I.append(i)
             J.append(j)
         else:
-            i = i+1
+            i = i + 1
             I.append(i)
             J.append(j)
     return I, J
@@ -86,7 +85,7 @@ if __name__ == '__main__':
     p = 1.5
     rho = .1
     niter = 100
-    C = np.abs(x[:,None] - y[None,:]) **p
+    C = np.abs(x[:, None] - y[None, :]) ** p
 
     # result, constr, P = solver_via_cvxpy(a, b, x, y, p, rho)
     result, constr, f, g = dual_via_cvxpy(a, b, x, y, p, rho)
@@ -95,7 +94,7 @@ if __name__ == '__main__':
     plt.imshow(np.log(constr[0].dual_value + 1e-10))
     # plt.imshow(np.log(P.value + 1e-10))
     plt.title('CVXPY')
-    plt.savefig(path + 'img_ref_cvxpy.png')
+    plt.savefig(os.path.join(path, 'img_ref_cvxpy.png'))
     plt.clf()
 
     # I, J, P, f, g, cost = solve_uot(a, b, x, y, p, rho, rho, niter=niter,
@@ -105,13 +104,12 @@ if __name__ == '__main__':
     #
     # plt.imshow(np.log(pi + 1e-10))
     # plt.title(f'Homogeneous')
-    # plt.savefig(path + 'img_homogeneous.png')
+    # plt.savefig(os.path.join(path, 'img_homogeneous.png'))
     # plt.clf()
     # print("\nHomogeneous")
     # print("first potential", f)
     # print("Second potential", g)
     # # print("Constraint", C - (f[:,None] + g[None,:]))
-
 
     # I, J, P, f, g, cost = solve_uot(a, b, x, y, p, rho, rho, niter=niter,
     #                                 line_search='newton')
@@ -119,7 +117,7 @@ if __name__ == '__main__':
     #                 shape=(x.shape[0], y.shape[0])).toarray()
     # plt.imshow(np.log(pi + 1e-10))
     # plt.title(f'newton')
-    # plt.savefig(path + 'img_newton.png')
+    # plt.savefig(os.path.join(path, 'img_newton.png'))
     # plt.clf()
     # print("\nNewton")
     # print("first potential", f)
@@ -130,14 +128,14 @@ if __name__ == '__main__':
                                     line_search='default')
     pi = csr_matrix((P, (I, J)),
                     shape=(x.shape[0], y.shape[0])).toarray()
-    gap = C - f[:,None] - g[None,:]
+    gap = C - f[:, None] - g[None, :]
     plt.imshow(np.log(gap + 1e-15))
     # plt.imshow(np.log(pi + 1e-10))
     plt.title(f'default')
-    plt.savefig(path + 'img_default.png')
+    plt.savefig(os.path.join(path, 'img_default.png'))
+    plt.show()
     plt.clf()
     print("\nDefault")
     print("first potential", f)
     # print("Second potential", g)
     # print("Constraint", C - (f[:,None] + g[None,:]))
-

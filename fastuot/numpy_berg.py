@@ -55,8 +55,8 @@ def dual_score_ent(f, g, a, b, C, eps, rho, rho2=None):
         rho2 = rho
 
     return np.sum(a * phis_berg(f, rho)) + np.sum(b * phis_berg(g, rho2)) \
-           + np.sum(a[:, None] * b[None, :]
-                    * phis_ent(C - f[:, None] - g[None, :], eps))
+        + np.sum(a[:, None] * b[None, :]
+                 * phis_ent(C - f[:, None] - g[None, :], eps))
 
 
 def aprox_berg(x, eps, rho):
@@ -79,12 +79,12 @@ def hess_phis_berg(x, s):
 
 def grad_invariant(t, f, g, a, b, rho, rho2):
     return np.sum(a * grad_phis_berg(-f - t, rho)) \
-           - np.sum(b * grad_phis_berg(-g + t, rho2))
+        - np.sum(b * grad_phis_berg(-g + t, rho2))
 
 
 def hess_invariant(t, f, g, a, b, rho, rho2):
     return - np.sum(a * hess_phis_berg(-f - t, rho)) \
-           - np.sum(b * hess_phis_berg(-g + t, rho2))
+        - np.sum(b * hess_phis_berg(-g + t, rho2))
 
 
 def rescale_berg(f, g, a, b, rho, rho2=None, nits=10, init=0.):
@@ -113,9 +113,6 @@ def f_sinkhorn_loop(f, a, b, C, eps, rho, rho2=None):
     f = sinky(C, g, b, eps)
     f = -aprox_berg(-f, eps, rho)
     return f, g
-
-
-
 
 
 ###############################################################################

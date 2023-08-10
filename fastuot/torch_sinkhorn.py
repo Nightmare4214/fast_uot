@@ -1,6 +1,3 @@
-import torch
-
-
 def sinkx(C, f, a, eps):
     return - eps * (a.log()[:, None] + (f[:, None] - C) / eps).logsumexp(dim=0)
 
@@ -25,8 +22,8 @@ def dual_score_ent(f, g, a, b, C, eps, rho, rho2=None):
         return -s * ((-x / s).exp() - 1)
 
     return (a * phi(f, rho)).sum() + (b * phi(g, rho2)).sum() \
-           + (a[:, None] * b[None, :] * phi(C - f[:, None] - g[None, :],
-                                            eps)).sum()
+        + (a[:, None] * b[None, :] * phi(C - f[:, None] - g[None, :],
+                                         eps)).sum()
 
 
 def rescale_potentials(f, g, a, b, rho, rho2):

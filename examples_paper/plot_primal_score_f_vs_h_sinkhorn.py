@@ -4,20 +4,18 @@ optimality of plan to compute primal score and compare both versions.
 Compare (or not) in log-scale with approximated optimal
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import os
-import torch
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from fastuot.numpy_sinkhorn import h_sinkhorn_loop, f_sinkhorn_loop, dual_score_ent
 from utils_examples import generate_synthetic_measure
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-if not os.path.isdir(path + "primalcost/"):
-    os.mkdir(path + "primalcost/")
-path = path + "primalcost/"
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+os.makedirs(os.path.join(path, 'primalcost'), exist_ok=True)
+path = os.path.join(path, 'primalcost')
 
 
 def kl_entropy(x):
@@ -53,7 +51,6 @@ if __name__ == '__main__':
                 break
         cost_r = dual_score_ent(fr, gr, a, b, C, eps, rho, rho2=None)
 
-
         # compute potential and primal cost
         f_f, f_h = np.zeros_like(a), np.zeros_like(a)
         cost_f, cost_h = np.zeros(nits), np.zeros(nits)
@@ -61,25 +58,24 @@ if __name__ == '__main__':
             f_f, g_f = f_sinkhorn_loop(f_f, a, b, C, eps, rho)
             f_h, g_h = h_sinkhorn_loop(f_h, a, b, C, eps, rho)
 
-            pi_f = np.exp((f_f[:,None] + g_f[None:] - C) / eps) * a[:,None] * b[None,:]
-            pi_h = np.exp((f_h[:, None] + g_h[None:] - C) / eps) * a[:,None] * b[None,:]
-            cost_f[i] = primal_cost(pi_f, a, b, eps, rho) #- cost_r
-            cost_h[i] = primal_cost(pi_h, a, b, eps, rho) #- cost_r
-        np.save(path + "primal_cost_f.npy", cost_f)
-        np.save(path + "primal_cost_h.npy", cost_h)
-
+            pi_f = np.exp((f_f[:, None] + g_f[None:] - C) / eps) * a[:, None] * b[None, :]
+            pi_h = np.exp((f_h[:, None] + g_h[None:] - C) / eps) * a[:, None] * b[None, :]
+            cost_f[i] = primal_cost(pi_f, a, b, eps, rho)  # - cost_r
+            cost_h[i] = primal_cost(pi_h, a, b, eps, rho)  # - cost_r
+        np.save(os.path.join(path, "primal_cost_f.npy"), cost_f)
+        np.save(os.path.join(path, "primal_cost_h.npy"), cost_h)
 
     ###########################################################################
     # Make plots
     ###########################################################################
-    cost_f = np.load(path + "primal_cost_f.npy")
-    cost_h = np.load(path + "primal_cost_h.npy")
+    cost_f = np.load(os.path.join(path, "primal_cost_f.npy"))
+    cost_h = np.load(os.path.join(path, "primal_cost_h.npy"))
 
     p = 0.97
     colors = ['cornflowerblue', 'indianred']
     markers = ['x', 'o']
     linestyles = ['dotted', 'dashed']
-    labels = ['$\mathcal{F}$','$\mathcal{H}$']
+    labels = ['$\mathcal{F}$', '$\mathcal{H}$']
     markevery = 2
     costs = [cost_f, cost_h]
 
@@ -100,5 +96,5 @@ if __name__ == '__main__':
     ax.set_ylabel('Primal cost', fontsize=15)
 
     plt.tight_layout()
-    plt.savefig(path + f'plot_primal_cost.pdf')
+    plt.savefig(os.path.join(path, f'plot_primal_cost.pdf'))
     plt.show()

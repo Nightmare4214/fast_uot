@@ -1,11 +1,9 @@
+import warnings
+
 import numpy as np
 from numba import jit
+from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
 from tqdm import tqdm
-
-# Numba issues a deprecation warning for lists...
-from numba.core.errors import NumbaDeprecationWarning, \
-    NumbaPendingDeprecationWarning
-import warnings
 
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
 warnings.simplefilter("ignore", category=NumbaPendingDeprecationWarning)

@@ -1,0 +1,9 @@
+matplotlib
+wot
+pandas
+cvxpy
+scipy
+numba
+tqdm
+pytest
+statsmodels

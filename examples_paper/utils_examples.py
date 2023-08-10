@@ -1,11 +1,12 @@
 import numpy as np
 
+
 def normalize(x):
     return x / np.sum(x)
 
 
 def gauss(grid, mu, sig):
-    return np.exp(-0.5 * ((grid-mu) / sig) ** 2)
+    return np.exp(-0.5 * ((grid - mu) / sig) ** 2)
 
 
 def generate_synthetic_measure(n, m):

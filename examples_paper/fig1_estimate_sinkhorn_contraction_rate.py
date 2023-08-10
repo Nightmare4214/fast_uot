@@ -3,22 +3,20 @@ NB: Data for the WOT package can be downloaded at https://drive.google.com/open?
 See https://broadinstitute.github.io/wot/tutorial/ for more details
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from utils_examples import generate_synthetic_measure
 
-path = os.getcwd() + "/output/"
-if not os.path.isdir(path):
-    os.mkdir(path)
-path = path + "cvrate/"
-if not os.path.isdir(path):
-    os.mkdir(path)
+path = os.path.join(os.getcwd(), 'output')
+os.makedirs(path, exist_ok=True)
+path = os.path.join(path, "cvrate")
+os.makedirs(path, exist_ok=True)
 
 rc = {"pdf.fonttype": 42, 'text.usetex': True,
-      'text.latex.preamble': [r'\usepackage{amsmath}',
-                              r'\usepackage{amssymb}']}
+      'text.latex.preamble': ''.join([r'\usepackage{amsmath}', r'\usepackage{amssymb}'])}
 plt.rcParams.update(rc)
 
 
@@ -89,9 +87,9 @@ def load_wot_data():
 
 
 if __name__ == '__main__':
-    compute_data = True # If false then load precomputed results and plots
-    wot_data = False # If true uses the WOT package biological data
-    
+    compute_data = True  # If false then load precomputed results and plots
+    wot_data = True  # If true uses the WOT package biological data
+
     marginal_penalty_l = ['kl', 'berg']
     penalty = marginal_penalty_l[0]
     if penalty == 'kl':
@@ -100,7 +98,7 @@ if __name__ == '__main__':
         from fastuot.numpy_berg import f_sinkhorn_loop, h_sinkhorn_loop
     else:
         raise Exception('Only accepted penalties are KL and Berg.')
-    
+
     # load data for computations
     if wot_data:
         a, b, C = load_wot_data()
@@ -110,7 +108,7 @@ if __name__ == '__main__':
         a, x, b, y = generate_synthetic_measure(N, N)
         C = (x[:, None] - y[None, :]) ** 2
         dataname = 'synth'
-    
+
     # Grid of parameters for Sinkhorn algorithm
     eps_l = [np.log10(0.1), np.log10(0.5)]
     rho_scale = np.arange(-3., 2.5, 0.5)
@@ -121,7 +119,7 @@ if __name__ == '__main__':
     # Generate data plots
     ###########################################################################
     if compute_data:
-        np.save(path + f"rho_scale.npy", rho_scale)
+        np.save(os.path.join(path, f"rho_scale.npy"), rho_scale)
         for k, r in enumerate(eps_l):
             epst = 10 ** r
             rate = [[], [], []]
@@ -156,7 +154,7 @@ if __name__ == '__main__':
 
             for k, (s, loop) in enumerate(zip(string_method, func_method)):
                 np.save(
-                    path + "rate_" + s + f"_sinkhorn_{penalty}_eps{epst}_{dataname}.npy",
+                    os.path.join(path, f"rate_{s}_sinkhorn_{penalty}_eps{epst}_{dataname}.npy"),
                     np.array(rate[k]))
 
     ###########################################################################
@@ -170,20 +168,20 @@ if __name__ == '__main__':
     markevery = 2
     f, ax = plt.subplots(1, 1, figsize=(p * 5, p * 4))
 
-    rho_scale = 10 ** np.load(path + f"rho_scale.npy")
+    rho_scale = 10 ** np.load(os.path.join(path, f"rho_scale.npy"))
 
     for logeps, color, marker in zip(eps_l, colors, markers):
         epst = 10 ** logeps
         for linestyle, label, s in zip(linestyles, labels, string_method):
             rate_f = np.load(
-                path + f"rate_" + s + f"_sinkhorn_{penalty}_eps{epst}_{dataname}.npy")
+                os.path.join(path, f"rate_{s}_sinkhorn_{penalty}_eps{epst}_{dataname}.npy"))
             ax.plot(rho_scale, 10 ** rate_f, c=color, linestyle=linestyle,
                     label=label + f' {np.around(epst, decimals=1)}',
                     marker=marker, markevery=markevery)
 
     ax.legend(fontsize=11, ncol=2, columnspacing=0.5, handlelength=2.,
               loc=(.28, .02))
-              # loc=(.42, .02))
+    # loc=(.42, .02))
 
     ax.grid()
     ax.set_yscale('log')
@@ -197,5 +195,5 @@ if __name__ == '__main__':
     ax.set_ylabel('Contraction rate', fontsize=18)
 
     plt.tight_layout()
-    plt.savefig(path + f'plot_log_contraction_rate_{penalty}_{dataname}.pdf')
+    plt.savefig(os.path.join(path, f'plot_log_contraction_rate_{penalty}_{dataname}.pdf'))
     plt.show()
